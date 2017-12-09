@@ -39,6 +39,10 @@ public class DiskCache implements ImageCache {
 		
 	}
 	
+	public void setImageFetcher(ImageFetcher imageFetcher) {
+		mImageFetcher = imageFetcher;
+	}
+	
 	public File getDiskCacheDir(Context context, String dirName) {
 		String cachePath;
 		if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) || !Environment.isExternalStorageRemovable()) {
@@ -68,26 +72,6 @@ public class DiskCache implements ImageCache {
 		return getFromDiskCache(url, reqWidth, reqHeight);
 	}
 	
-	public Bitmap getFromDiskCache(String url, int reqWidth, int reqHeight) {
-		String key = MD5Util.hashKeyFromUrl(url);
-		try {
-			DiskLruCache.Snapshot snapshot = mDiskLruCache.get(key);
-			if (snapshot == null) {
-				return null;
-			}
-			FileInputStream fis = (FileInputStream) snapshot.getInputStream(0);
-			if (reqWidth <= 0 || reqHeight <= 0) {
-				return BitmapFactory.decodeStream(fis);
-			} else {
-				return BitmapUtils.getSmallBitmap(fis.getFD(), reqWidth, reqHeight);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	
 	public void downloadBitmapToDiskCache(String url) {
 		String key = MD5Util.hashKeyFromUrl(url);
 		try {
@@ -106,6 +90,25 @@ public class DiskCache implements ImageCache {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public Bitmap getFromDiskCache(String url, int reqWidth, int reqHeight) {
+		String key = MD5Util.hashKeyFromUrl(url);
+		try {
+			DiskLruCache.Snapshot snapshot = mDiskLruCache.get(key);
+			if (snapshot == null) {
+				return null;
+			}
+			FileInputStream fis = (FileInputStream) snapshot.getInputStream(0);
+			if (reqWidth <= 0 || reqHeight <= 0) {
+				return BitmapFactory.decodeStream(fis);
+			} else {
+				return BitmapUtils.getSmallBitmap(fis.getFD(), reqWidth, reqHeight);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	

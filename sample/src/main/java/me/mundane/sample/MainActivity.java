@@ -7,7 +7,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 
 import me.mundane.sample.model.GankMeiziResult;
-import me.mundane.sample.network.HttpUtil;
+import me.mundane.sample.network.APIFactory;
 import me.mundane.sample.network.api.GankAPI;
 import me.mundane.sample.recycler.MeiZiAdapter;
 import rx.Subscriber;
@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_main);
 		mRv = (RecyclerView) findViewById(R.id.rv);
 		mRv.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-		GankAPI gankAPI = HttpUtil.getGankAPI();
+		GankAPI gankAPI = APIFactory.createGankAPI();
 		// 这里的gankAPI.getMeiziData(10, 1)代替之前的call
 		gankAPI.getMeiziData(10, 1)
 		    .subscribeOn(Schedulers.io())

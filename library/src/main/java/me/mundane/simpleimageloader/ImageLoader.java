@@ -22,7 +22,7 @@ public class ImageLoader {
 	private final String TAG = "ImageLoader";
 	private MemoryCache mMemoryCache;
 	private DiskCache mDiskCache;
-	private static volatile ImageLoader sInstance;
+	private static volatile ImageLoader INSTANCE;
 	public static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
 	private static final int CORE_POOL_SIZE = CPU_COUNT + 1;
 	private static final int MAX_POOL_SIZE = 2 * CPU_COUNT + 1;
@@ -38,14 +38,14 @@ public class ImageLoader {
 	}
 	
 	public static ImageLoader getInstance(Context context) {
-		if (sInstance == null) {
+		if (INSTANCE == null) {
 			synchronized (ImageLoader.class) {
-				if (sInstance == null) {
-					sInstance = new ImageLoader(context.getApplicationContext());
+				if (INSTANCE == null) {
+					INSTANCE = new ImageLoader(context.getApplicationContext());
 				}
 			}
 		}
-		return sInstance;
+		return INSTANCE;
 	}
 	
 	public void displayImage(String url, final ImageView imageView) {
@@ -111,24 +111,24 @@ public class ImageLoader {
 			public void run() {
 				// 从本地或者网络获取图片, 在子线程中进行
 				final Bitmap bitmap = mDiskCache.get(url, reqWidth, reqHeight);
-				if (bitmap != null) {
-					// 添加到内存缓存中
-					mMemoryCache.put(url, bitmap);
-					mHandler.post(new Runnable() {
-						@Override
-						public void run() {
-							// 判断是否数据错乱, 因为加载图片的过程过程是异步的, 哪些图片先下载好是不一定的
-							// 有可能一张图片先下了, 但是另一张图片后下载的却比它下载的更快
-							String uri =(String)imageView.getTag();
-							if (TextUtils.equals(url, uri)) {
-								imageView.setImageBitmap(bitmap);
-							} else {
-								Log.w(TAG, "The url associated with imageView has changed");
-							}
-						}
-					});
+				if (bitmap == null) {
+					return;
 				}
-				
+				// 添加到内存缓存中
+				mMemoryCache.put(url, bitmap);
+				mHandler.post(new Runnable() {
+					@Override
+					public void run() {
+						// 判断是否数据错乱, 因为加载图片的过程过程是异步的, 哪些图片先下载好是不一定的
+						// 有可能一张图片先下了, 但是另一张图片后下载的却比它下载的更快
+						String uri =(String)imageView.getTag();
+						if (TextUtils.equals(url, uri)) {
+							imageView.setImageBitmap(bitmap);
+						} else {
+							Log.w(TAG, "The url associated with imageView has changed");
+						}
+					}
+				});
 			}
 		};
 		mThreadPoolExecutor.execute(loadBitmapRunnable);
